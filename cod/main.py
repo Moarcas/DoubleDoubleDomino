@@ -8,35 +8,44 @@ def showImage(image):
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def filterImage(image):
-    frame_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
-    l = np.array([85, 90, 110])
-    u = np.array([100, 255, 255])
+def filterImage(img):
+    l_h = 85
+    l_s = 155
+    l_v = 145
+    u_h = 100
+    u_s = 255
+    u_v = 255
+    frame_hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    l = np.array([l_h, l_s, l_v])
+    u = np.array([u_h, u_s, u_v])
     mask_table_hsv = cv.inRange(frame_hsv, l, u)        
-    res = cv.bitwise_and(image, image, mask=mask_table_hsv)    
+    res = cv.bitwise_and(img, img, mask=mask_table_hsv)    
     res = cv.cvtColor(res, cv.COLOR_BGR2GRAY)
+    res = cv.medianBlur(res,5)
+    res = cv.GaussianBlur(res, (0, 0), 7) 
     _, res = cv.threshold(res, 10, 255, cv.THRESH_BINARY)
-    kernel = np.ones((5, 5), np.uint8)
-    res = cv.morphologyEx(res, cv.MORPH_OPEN, kernel)
-    res = cv.GaussianBlur(res, (5, 5), 0)
-    showImage(res)
+
+    # TODO: try Canny Edge
     return res
     
 def getBoardCorners():
     path = '../date/imagini_auxiliare/'
     image_name = '01.jpg'
+    points = []
 
     image = cv.imread(path + image_name)
-    filtered_image = filterImage(image)
-    contours, _ = cv.findContours(filtered_image, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    cv.drawContours(image, contours, -1, (0, 255, 0), 2)
-    showImage(image)
+
+    contours, _ = cv.findContours(filterImage(image), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     for cnt in contours:
         epsilon = 0.02 * cv.arcLength(cnt, True)
         approx = cv.approxPolyDP(cnt, epsilon, True)
 
         if len(approx) == 4:
             board_corners = approx.reshape((4, 2))
+            board_corners[0][0] += 30
+            board_corners[3][0] += 30
+            board_corners[3][1] += 30
+            board_corners[2][1] += 30
             return board_corners
 
 def getBoard(image, board_corners):
@@ -49,56 +58,15 @@ def getBoard(image, board_corners):
 
     return result
 
-def filterBoard(image):
-    l_h = 87
-    l_s = 0
-    l_v = 234
-    u_h = 255
-    u_s = 255
-    u_v = 255
-    frame_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
-    l = np.array([l_h, l_s, l_v])
-    u = np.array([u_h, u_s, u_v])
-    mask_table_hsv = cv.inRange(frame_hsv, l, u)        
-    image = cv.bitwise_and(image, image, mask=mask_table_hsv)    
-    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    _, res = cv.threshold(image, 10, 255, cv.THRESH_BINARY)
-    kernel = np.ones((15, 15), np.uint8)
-    image = cv.morphologyEx(res, cv.MORPH_OPEN, kernel)
-
-    return image
-
-def readFile(filepath):
-    player_order = []
-    with open(filepath, 'r') as file:
-        for line in file:
-            player_order.append(int(line[-2]))
-    return player_order
-
-def readGame(number_game):
-    folder_path = '../date/antrenare/'
-    images = []
-    player_order = readFile(folder_path + number_game + '_mutari.txt')
-
-    # TODO: delete this
-    path = '../date/imagini_auxiliare/01.jpg'
-    return np.array([cv.imread(path)]), player_order
-
-     
-    for filename in os.listdir(folder_path):
-        if filename[0] == number_game:
-            if filename.endswith('.jpg'):
-                file_path = os.path.join(folder_path, filename)
-                image = cv.imread(file_path)
-                images.append(image)
-    return np.array(images), player_order
-
-
 def main():
-    number_games = 5
-    images, player_order = readGame('5')
-    image = getBoard(images[0], getBoardCorners())
-    #showImage(image)
+    image_name = '5_20.jpg'
+    path = '../date/antrenare/'
+    image = cv.imread(path + image_name)
+
+    board_corners = getBoardCorners()
+    image = getBoard(image, board_corners)
+
+    showImage(image)
 
 if __name__ == "__main__":
     main()
