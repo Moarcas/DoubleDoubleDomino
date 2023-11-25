@@ -27,18 +27,15 @@ def main():
                 if my_position != true_position:
                     print(file_name)
                     print('Pozitie gresita!')
-                    return
                 if my_nr_dots != true_nr_dots:
                     print(file_name)
                     print('Numar puncte gresit')
-                    return
             
             true_points = true_labels[2].split()[0]
             my_points = my_labels[2].split()[0]
             if true_points != my_points:
                 print(file_name)
                 print('Punctaj gresit')
-                return
 
 
 if __name__ == '__main__':

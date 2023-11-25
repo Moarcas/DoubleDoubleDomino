@@ -28,12 +28,19 @@ board_track = [-1, 1, 2, 3, 4, 5, 6, 0, 2, 5, 3, 4, 6, 2, 2, 0,
           2, 6, 2, 3, 1, 6, 5, 6, 2, 0, 4, 0, 1, 6, 4, 4,
           1, 6, 6, 3, 0]
 
+path_read = '../date/antrenare/'
+path_write = '../date/351_Moarcas_Cosmin/'
+
+number_games = 5
+number_moves = 20
+
 def showImage(image):
     cv.namedWindow("Imagine", cv.WINDOW_NORMAL)
     cv.imshow("Imagine", image)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+# Filter to get the game board
 def filterImage(image):
     frame_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
     l = np.array([20, 20, 0])
@@ -45,6 +52,19 @@ def filterImage(image):
     kernel = np.ones((3,3),np.uint8)
     image = cv.erode(image, kernel, iterations=3)
     image = cv.dilate(image, kernel, iterations=5)
+    return image
+
+# Filter to get domios from the board 
+def filterTable(image):
+    frame_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    l = np.array([90, 20, 220])
+    u = np.array([150, 115, 255])
+    mask_table_hsv = cv.inRange(frame_hsv, l, u)        
+    image = cv.bitwise_and(image, image, mask=mask_table_hsv)    
+    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    _, image = cv.threshold(image, 150, 255, cv.THRESH_BINARY)
+    kernel = np.ones((3,3),np.uint8)
+    image = cv.medianBlur(image, 25)
     return image
     
 def getBoardCorners(image):
@@ -94,41 +114,6 @@ def getBoard(image):
 
     return result
 
-def drawLines(image):
-    for line in range(28, image.shape[0], 268):
-        cv.line(image, (0 ,line), (image.shape[1] ,line), (0, 0, 255), 3)
-
-    for column in range(22, image.shape[1], 202):
-        cv.line(image, (column ,0), (column, image.shape[0]), (0, 0, 255), 3)
-
-
-def saveBoardImages():
-    path_read = '../date/antrenare/'
-    path_write = '../date/antrenare_tabla_joc/'
-    
-    for joc in range(1, 6):
-        for i in range(1, 21):
-            if i < 10:
-                image_name = f"{joc}_0{i}.jpg"
-            else:
-                image_name = f"{joc}_{i}.jpg"
-                
-            image = cv.imread(path_read + image_name)
-            image = getBoard(image)
-            cv.imwrite(path_write + image_name, image)
-
-def filterTable(image):
-    frame_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
-    l = np.array([90, 20, 220])
-    u = np.array([150, 115, 255])
-    mask_table_hsv = cv.inRange(frame_hsv, l, u)        
-    image = cv.bitwise_and(image, image, mask=mask_table_hsv)    
-    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    _, image = cv.threshold(image, 150, 255, cv.THRESH_BINARY)
-    kernel = np.ones((3,3),np.uint8)
-    image = cv.medianBlur(image, 25)
-    return image
-
 def getPositionByLine(line):
     return 268 * line + 28
 
@@ -168,6 +153,37 @@ def getPiecePosition(image, last_image):
     point1, point2 = sorted([point1, point2])
     return (point1, point2)
 
+def getNumberOfDotsDebug(image, line, column):
+    line_start = getPositionByLine(line)
+    line_end = line_start + 268
+    column_start = getPositionByColumn(column)
+    column_end = column_start+ 202
+    half_domino = image[line_start:line_end, column_start:column_end]
+    x = half_domino
+    half_domino = cv.cvtColor(half_domino, cv.COLOR_BGR2GRAY)
+    half_domino = cv.medianBlur(half_domino, 15)
+    half_domino = cv.GaussianBlur(half_domino, (9, 9), 2)
+    half_domino = np.clip(1.5 * half_domino + 150, 0, 255).astype(np.uint8)
+    showImage(half_domino)
+
+    circles = cv.HoughCircles(half_domino, cv.HOUGH_GRADIENT, 1, 45,
+                               param1=100, param2=16,
+                               minRadius=25, maxRadius=32)
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+        for i in circles[0, :]:
+            center = (i[0], i[1])
+            # circle center
+            cv.circle(x, center, 1, (0, 100, 100), 3)
+            # circle outline
+            radius = i[2]
+            cv.circle(x, center, radius, (255, 0, 255), 3)
+    showImage(x)
+    nr_dots = 0
+    if circles is not None:
+        nr_dots = circles.shape[1]
+    return nr_dots
+
 def getNumberOfDots(image, line, column):
     line_start = getPositionByLine(line)
     line_end = line_start + 268
@@ -177,21 +193,12 @@ def getNumberOfDots(image, line, column):
     x = half_domino
     half_domino = cv.cvtColor(half_domino, cv.COLOR_BGR2GRAY)
     half_domino = cv.medianBlur(half_domino, 15)
+    half_domino = cv.GaussianBlur(half_domino, (9, 9), 2)
     half_domino = np.clip(1.5 * half_domino + 150, 0, 255).astype(np.uint8)
 
-    circles = cv.HoughCircles(half_domino, cv.HOUGH_GRADIENT, 1, 50,
-                               param1=100, param2=15,
-                               minRadius=20, maxRadius=30)
-    #if circles is not None:
-    #    circles = np.uint16(np.around(circles))
-    #    for i in circles[0, :]:
-    #        center = (i[0], i[1])
-    #        # circle center
-    #        cv.circle(x, center, 1, (0, 100, 100), 3)
-    #        # circle outline
-    #        radius = i[2]
-    #        cv.circle(x, center, radius, (255, 0, 255), 3)
-    #showImage(x)
+    circles = cv.HoughCircles(half_domino, cv.HOUGH_GRADIENT, 1, 45,
+                               param1=100, param2=16,
+                               minRadius=25, maxRadius=32)
     nr_dots = 0
     if circles is not None:
         nr_dots = circles.shape[1]
@@ -199,26 +206,23 @@ def getNumberOfDots(image, line, column):
 
 
 def processGames():
-    path_read = '../date/antrenare_tabla_joc/'
-    path_write = '../date/351_Moarcas_Cosmin/'
-    last_image_ = getBoard(cv.imread('../date/imagini_auxiliare/01.jpg'))
+    empty_board = getBoard(cv.imread('../date/imagini_auxiliare/01.jpg'))
 
-
-    for joc in range(1, 6):
-        file_players_order = open(f'../date/antrenare/{joc}_mutari.txt')
-        last_image = last_image_
+    for joc in range(1, number_games + 1):
+        file_players_order = open(path_read + f'{joc}_mutari.txt')
+        last_image = empty_board
         points = [0, 0]
-        for i in range(1, 21):
+        for i in range(1, number_moves + 1):
+            current_player = int(file_players_order.readline().split()[1][-1]) - 1
+
             if i < 10:
                 image_name = f"{joc}_0{i}.jpg"
             else:
                 image_name = f"{joc}_{i}.jpg"
             
-            file_name = image_name[:-3] + 'txt'
-
-            current_player = int(file_players_order.readline().split()[1][-1]) - 1
-
             image = cv.imread(path_read + image_name)
+            image = getBoard(image)
+
             square1_position, square2_position = getPiecePosition(image, last_image)
 
             square1_nr_dots = getNumberOfDots(image, *square1_position)
@@ -239,6 +243,8 @@ def processGames():
             line_square2 = square2_position[0] + 1
             column_square1 = chr(ord('A') + square1_position[1])
             column_square2 = chr(ord('A') + square2_position[1])
+            
+            file_name = image_name[:-3] + 'txt'
 
             with open(path_write + file_name, 'w') as file:
                 file.write(str(line_square1) + str(column_square1) + ' ' + str(square1_nr_dots) + '\n')
@@ -247,31 +253,29 @@ def processGames():
 
             last_image = image
 
+def drawLines(image):
+    for line in range(28, image.shape[0], 268):
+        cv.line(image, (0 ,line), (image.shape[1] ,line), (0, 0, 255), 3)
+
+    for column in range(22, image.shape[1], 202):
+        cv.line(image, (column ,0), (column, image.shape[0]), (0, 0, 255), 3)
 
 def processGamesDebug():
-    path_read = '../date/antrenare_tabla_joc/'
+    empty_board = cv.imread('../date/imagini_auxiliare/01.jpg')
+    path_read = '../date/antrenare/'
     path_write = '../date/351_Moarcas_Cosmin/'
-    last_image = cv.imread(path_read + '1_12.jpg')
-    last_image = getBoard(cv.imread('../date/imagini_auxiliare/01.jpg'))
-    image = cv.imread(path_read + '5_01.jpg')
-    file_name = '5_01.txt'
+    last_image = cv.imread(path_read + '3_16.jpg')
+    last_image = getBoard(last_image)
+    image = cv.imread(path_read + '3_17.jpg')
+    image = getBoard(image)
 
     point1, point2 = getPiecePosition(image, last_image)
 
-    nr_dots_point1 = getNumberOfDots(image, *point1)
-    nr_dots_point2 = getNumberOfDots(image, *point2)
-
-    line_point1 = point1[0] + 1
-    line_point2 = point2[0] + 1
-    column_point1 = chr(ord('A') + point1[1])
-    column_point2 = chr(ord('A') + point2[1])
-
-    with open(path_write + file_name, 'w') as file:
-        file.write(str(line_point1) + str(column_point1) + ' ' + str(nr_dots_point1) + '\n')
-        file.write(str(line_point2) + str(column_point2) + ' ' + str(nr_dots_point2))
-
+    nr_dots_point1 = getNumberOfDotsDebug(image, *point1)
+    nr_dots_point2 = getNumberOfDotsDebug(image, *point2)
 
 def main():
+    #processGamesDebug()
     processGames()
 
 if __name__ == "__main__":
