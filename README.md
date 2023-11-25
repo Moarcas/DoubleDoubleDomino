@@ -1,5 +1,3 @@
-# README
-
 This project contains a Python script for processing Double Double Domino game moves based on provided images. The script uses the OpenCV library for image processing.
 
 ## Libraries Required
@@ -11,6 +9,7 @@ You can install these libraries using the following command:
 
 ```bash
 pip install opencv-python==4.1.1.26 numpy==1.15.4
+```
 
 
 ## How to Run
