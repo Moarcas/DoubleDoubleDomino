@@ -1,25 +1,43 @@
-Your project should include a README file containing the following information:
+# README
 
-1. the libraries required to run the project including the full version of each library
+This project contains a Python script for processing Double Double Domino game moves based on provided images. The script uses the OpenCV library for image processing.
 
-Example:
+## Libraries Required
 
-numpy==1.15.4
-opencv_python==4.1.1.26
-scikit_image==0.15.0
-tensorflow_gpu==1.12.0
-Pillow==7.0.0
-scikit_learn==0.22.1
-skimage==0.0
-tensorflow==2.1.0
+- OpenCV: version 4.1.1.26
+- NumPy: version 1.15.4
 
-2. how to run each task and where to look for the output file.
+You can install these libraries using the following command:
 
-Example:
+```bash
+pip install opencv-python==4.1.1.26 numpy==1.15.4
 
-Task 1: 
-script: task_1.py
-function: run_task1(input_folder_name), where input_folder_name is the path to the folder containing the images for task1
-output: the output file is results/task1.txt
 
-Task 2: ...
+## How to Run
+
+The main functionality of the script is to process game moves from images. Here's how to run it:
+
+1. **Modify Input Paths:**
+   - Open the script and modify the `path_read` and `path_write` variables according to the location of your input images and where you want to store the output files.
+
+2. **Run the Script:**
+   - Execute the script by running the following command in your terminal:
+
+     ```
+     python your_script_name.py
+     ```
+
+   Replace `your_script_name.py` with the actual name of your Python script.
+
+3. **Output:**
+   - The script processes game moves based on the provided images and generates output files in the specified output directory (`path_write`).
+
+   - Each output file corresponds to a processed image and contains information about the game moves.
+
+## Additional Information
+
+- The script uses various image processing techniques, and you can find detailed information about each step within the code comments.
+
+- Debugging functionality (`processGamesDebug()`) is also available, and you can choose to run it for debugging purposes.
+
+Feel free to reach out if you have any questions or encounter issues while running the script.
