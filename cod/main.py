@@ -67,6 +67,7 @@ def filterTable(image):
     _, image = cv.threshold(image, 150, 255, cv.THRESH_BINARY)
     kernel = np.ones((3,3),np.uint8)
     image = cv.medianBlur(image, 25)
+    showImage(image)
     return image
     
 def getBoardCorners(image):
@@ -139,6 +140,7 @@ def getPositionByColumn(column):
 
 def getPiecePosition(image, last_image):
     difference_image = filterTable(image) - filterTable(last_image)
+    showImage(difference_image)
     max_mean1 = 30
     max_mean2 = 30
     point1 = (0, 0)
@@ -170,35 +172,6 @@ def getPiecePosition(image, last_image):
     point1, point2 = sorted([point1, point2])
     return (point1, point2)
 
-def getNumberOfDotsDebug(image, line, column):
-    line_start = getPositionByLine(line)
-    line_end = line_start + 268
-    column_start = getPositionByColumn(column)
-    column_end = column_start+ 202
-    half_domino = image[line_start:line_end, column_start:column_end]
-    x = half_domino
-    half_domino = cv.cvtColor(half_domino, cv.COLOR_BGR2GRAY)
-    half_domino = cv.medianBlur(half_domino, 15)
-    half_domino = cv.GaussianBlur(half_domino, (9, 9), 2)
-    half_domino = np.clip(1.5 * half_domino + 150, 0, 255).astype(np.uint8)
-
-    circles = cv.HoughCircles(half_domino, cv.HOUGH_GRADIENT, 1, 40,
-                               param1=100, param2=16,
-                               minRadius=25, maxRadius=32)
-    if circles is not None:
-        circles = np.uint16(np.around(circles))
-        for i in circles[0, :]:
-            center = (i[0], i[1])
-            # circle center
-            cv.circle(x, center, 1, (0, 100, 100), 3)
-            # circle outline
-            radius = i[2]
-            cv.circle(x, center, radius, (255, 0, 255), 3)
-    showImage(x)
-    nr_dots = 0
-    if circles is not None:
-        nr_dots = circles.shape[1]
-    return nr_dots
 
 def getNumberOfDots(image, line, column):
     line_start = getPositionByLine(line)
@@ -269,31 +242,7 @@ def processGames():
 
             last_image = image
 
-def drawLines(image):
-    for line in range(30, image.shape[0], 269):
-        cv.line(image, (0 ,line), (image.shape[1] ,line), (0, 0, 255), 3)
-
-    for column in range(22, image.shape[1], 202):
-        cv.line(image, (column ,0), (column, image.shape[0]), (0, 0, 255), 3)
-
-def processGamesDebug():
-    empty_board = cv.imread('../date/imagini_auxiliare/01.jpg')
-    last_image = cv.imread(path_read + '2_08.jpg')
-    last_image = getBoard(last_image)
-    image = cv.imread(path_read + '2_09.jpg')
-    image = getBoard(image)
-
-    drawLines(image)
-    showImage(image)
-
-    point1, point2 = getPiecePosition(image, last_image)
-
-    nr_dots_point1 = getNumberOfDotsDebug(image, *point1)
-    print(nr_dots_point1)
-    nr_dots_point2 = getNumberOfDotsDebug(image, *point2)
-
 def main():
-    #processGamesDebug()
     processGames()
 
 if __name__ == "__main__":
