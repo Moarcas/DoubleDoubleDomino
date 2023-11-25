@@ -28,10 +28,12 @@ board_track = [-1, 1, 2, 3, 4, 5, 6, 0, 2, 5, 3, 4, 6, 2, 2, 0,
           2, 6, 2, 3, 1, 6, 5, 6, 2, 0, 4, 0, 1, 6, 4, 4,
           1, 6, 6, 3, 0]
 
-path_read = '../date/antrenare/'
-path_write = '../date/351_Moarcas_Cosmin/'
+path_read = '../date/evaluare/fake_test/'
+path_write = '../date/evaluare/fisiere_solutie/351_Moarcas_Cosmin/'
+#path_read = '../date/antrenare/'
+#path_write = '../date/351_Moarcas_Cosmin/'
 
-number_games = 5
+number_games = 1
 number_moves = 20
 
 def showImage(image):
@@ -49,9 +51,9 @@ def filterImage(image):
     image = cv.bitwise_and(image, image, mask=mask_table_hsv)    
     image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     _, image = cv.threshold(image, 0, 255, cv.THRESH_BINARY)
-    kernel = np.ones((3,3),np.uint8)
-    image = cv.erode(image, kernel, iterations=3)
-    image = cv.dilate(image, kernel, iterations=5)
+    kernel = np.ones((3, 3),np.uint8)
+    image = cv.erode(image, kernel, iterations=4)
+    image = cv.dilate(image, kernel, iterations=7)
     return image
 
 # Filter to get domios from the board 
@@ -70,11 +72,17 @@ def filterTable(image):
 def getBoardCorners(image):
     image_filtered = filterImage(image)
     contours, _ = cv.findContours(image_filtered, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    max_area = 0
+    max_area1= 0
+    top_left1 = 0
+    top_right1 = 0
+    bottom_left1 = 0
+    bottom_right1 = 0
+    max_area2 = 0
     top_left2 = 0
     top_right2 = 0
     bottom_left2 = 0
     bottom_right2 = 0
+
    
     for i in range(len(contours)):
         if(len(contours[i]) > 3):
@@ -90,17 +98,26 @@ def getBoardCorners(image):
             diff = np.diff(contours[i].squeeze(), axis = 1)
             possible_top_right = contours[i].squeeze()[np.argmin(diff)]
             possible_bottom_left = contours[i].squeeze()[np.argmax(diff)]
-            if cv.contourArea(np.array([[possible_top_left],[possible_top_right],[possible_bottom_right],[possible_bottom_left]])) > max_area:
-                max_area = cv.contourArea(np.array([[possible_top_left],[possible_top_right],[possible_bottom_right],[possible_bottom_left]]))
-                top_left = top_left2
-                bottom_right = bottom_right2
-                top_right = top_right2
-                bottom_left = bottom_left2
+            contour_area = cv.contourArea(np.array([[possible_top_left],[possible_top_right],[possible_bottom_right],[possible_bottom_left]]))
+            if  contour_area > max_area1:
+                max_area2 = max_area1                
+                top_left2 = top_left1
+                bottom_right2 = bottom_right1
+                top_right2 = top_right1
+                bottom_left2 = bottom_left1
+                max_area1 = contour_area
+                top_left1 = possible_top_left
+                bottom_right1 = possible_bottom_right
+                top_right1 = possible_top_right
+                bottom_left1 = possible_bottom_left
+            elif contour_area > max_area2:
+                max_area2 = contour_area
                 top_left2 = possible_top_left
                 bottom_right2 = possible_bottom_right
                 top_right2 = possible_top_right
                 bottom_left2 = possible_bottom_left
-    return top_left, top_right, bottom_right, bottom_left
+
+    return top_left2, top_right2, bottom_right2, bottom_left2
 
 
 def getBoard(image):
@@ -115,7 +132,7 @@ def getBoard(image):
     return result
 
 def getPositionByLine(line):
-    return 268 * line + 28
+    return 269 * line + 30
 
 def getPositionByColumn(column):
     return 202* column + 22
@@ -164,9 +181,8 @@ def getNumberOfDotsDebug(image, line, column):
     half_domino = cv.medianBlur(half_domino, 15)
     half_domino = cv.GaussianBlur(half_domino, (9, 9), 2)
     half_domino = np.clip(1.5 * half_domino + 150, 0, 255).astype(np.uint8)
-    showImage(half_domino)
 
-    circles = cv.HoughCircles(half_domino, cv.HOUGH_GRADIENT, 1, 45,
+    circles = cv.HoughCircles(half_domino, cv.HOUGH_GRADIENT, 1, 40,
                                param1=100, param2=16,
                                minRadius=25, maxRadius=32)
     if circles is not None:
@@ -196,7 +212,7 @@ def getNumberOfDots(image, line, column):
     half_domino = cv.GaussianBlur(half_domino, (9, 9), 2)
     half_domino = np.clip(1.5 * half_domino + 150, 0, 255).astype(np.uint8)
 
-    circles = cv.HoughCircles(half_domino, cv.HOUGH_GRADIENT, 1, 45,
+    circles = cv.HoughCircles(half_domino, cv.HOUGH_GRADIENT, 1, 40,
                                param1=100, param2=16,
                                minRadius=25, maxRadius=32)
     nr_dots = 0
@@ -254,7 +270,7 @@ def processGames():
             last_image = image
 
 def drawLines(image):
-    for line in range(28, image.shape[0], 268):
+    for line in range(30, image.shape[0], 269):
         cv.line(image, (0 ,line), (image.shape[1] ,line), (0, 0, 255), 3)
 
     for column in range(22, image.shape[1], 202):
@@ -262,16 +278,18 @@ def drawLines(image):
 
 def processGamesDebug():
     empty_board = cv.imread('../date/imagini_auxiliare/01.jpg')
-    path_read = '../date/antrenare/'
-    path_write = '../date/351_Moarcas_Cosmin/'
-    last_image = cv.imread(path_read + '3_16.jpg')
+    last_image = cv.imread(path_read + '2_08.jpg')
     last_image = getBoard(last_image)
-    image = cv.imread(path_read + '3_17.jpg')
+    image = cv.imread(path_read + '2_09.jpg')
     image = getBoard(image)
+
+    drawLines(image)
+    showImage(image)
 
     point1, point2 = getPiecePosition(image, last_image)
 
     nr_dots_point1 = getNumberOfDotsDebug(image, *point1)
+    print(nr_dots_point1)
     nr_dots_point2 = getNumberOfDotsDebug(image, *point2)
 
 def main():

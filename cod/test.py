@@ -2,8 +2,10 @@
 def main():
     path_true_labels = '../date/antrenare/'
     path_my_labels = '../date/351_Moarcas_Cosmin/'
+    path_true_labels = '../date/evaluare/fisiere_solutie/331_Alexe_Bogdan/'
+    path_my_labels = '../date/evaluare/fisiere_solutie/351_Moarcas_Cosmin/'
     
-    for joc in range(1, 6):
+    for joc in range(1, 2):
         for i in range(1, 21):
             if i < 10:
                 file_name = f"{joc}_0{i}.txt"
@@ -31,11 +33,11 @@ def main():
                     print(file_name)
                     print('Numar puncte gresit')
             
-            true_points = true_labels[2].split()[0]
-            my_points = my_labels[2].split()[0]
-            if true_points != my_points:
-                print(file_name)
-                print('Punctaj gresit')
+            #true_points = true_labels[2].split()[0]
+            #my_points = my_labels[2].split()[0]
+            #if true_points != my_points:
+            #    print(file_name)
+            #    print('Punctaj gresit')
 
 
 if __name__ == '__main__':

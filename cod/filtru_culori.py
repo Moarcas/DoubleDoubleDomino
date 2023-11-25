@@ -6,6 +6,13 @@ import matplotlib.pyplot as plt
 from numpy.random import uniform
 import pdb
 
+# Filter to get the game board
+def filterImage(image):
+    frame_hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    l = np.array([20, 20, 0])
+    u = np.array([120, 255, 255])
+    return image
+
 def find_color_values_using_trackbar(frame):
 
     frame_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -14,13 +21,13 @@ def find_color_values_using_trackbar(frame):
         pass
 
     cv.namedWindow("Trackbar") 
-    cv.createTrackbar("LH", "Trackbar", 90, 255, nothing)
-    cv.createTrackbar("LS", "Trackbar", 0, 255, nothing)
-    cv.createTrackbar("LV", "Trackbar", 235, 255, nothing)
-    cv.createTrackbar("UH", "Trackbar", 150, 255, nothing)
-    cv.createTrackbar("US", "Trackbar", 115, 255, nothing)
+    cv.createTrackbar("LH", "Trackbar", 20, 255, nothing)
+    cv.createTrackbar("LS", "Trackbar", 20, 255, nothing)
+    cv.createTrackbar("LV", "Trackbar", 0, 255, nothing)
+    cv.createTrackbar("UH", "Trackbar", 120, 255, nothing)
+    cv.createTrackbar("US", "Trackbar", 255, 255, nothing)
     cv.createTrackbar("UV", "Trackbar", 255, 255, nothing)
-    cv.createTrackbar("Threshold", "Trackbar", 150, 255, nothing)
+    cv.createTrackbar("Threshold", "Trackbar", 0, 255, nothing)
     
     while True:
         l_h = cv.getTrackbarPos("LH", "Trackbar")
@@ -36,9 +43,11 @@ def find_color_values_using_trackbar(frame):
         mask_table_hsv = cv.inRange(frame_hsv, l, u)        
 
         image = cv.bitwise_and(frame, frame, mask=mask_table_hsv)    
-
         image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        _, image = cv.threshold(image, threshold, 255, cv.THRESH_BINARY)
+        _, image = cv.threshold(image, 0, 255, cv.THRESH_BINARY)
+        kernel = np.ones((3,3),np.uint8)
+        image = cv.erode(image, kernel, iterations=3)
+        image = cv.dilate(image, kernel, iterations=5)
 
         cv.namedWindow("Frame", cv.WINDOW_NORMAL)
         cv.namedWindow("Image", cv.WINDOW_NORMAL)
@@ -50,8 +59,8 @@ def find_color_values_using_trackbar(frame):
     cv.destroyAllWindows()
 
 def main():
-    path = '../date/antrenare_tabla_joc/'
-    image_name = "5_20.jpg"
+    path = '../date/evaluare/fake_test/'
+    image_name = "1_07.jpg"
     img = cv.imread(path + image_name)
     find_color_values_using_trackbar(img)
     return
