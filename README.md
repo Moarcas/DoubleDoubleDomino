@@ -23,10 +23,9 @@ The main functionality of the script is to process game moves from images. Here'
    - Execute the script by running the following command in your terminal:
 
      ```
-     python your_script_name.py
+     python main.py
      ```
 
-   Replace `your_script_name.py` with the actual name of your Python script.
 
 3. **Output:**
    - The script processes game moves based on the provided images and generates output files in the specified output directory (`path_write`).
