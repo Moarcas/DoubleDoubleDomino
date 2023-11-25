@@ -20,11 +20,11 @@ points_matrix = [
     [5, 0, 0, 4, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 5],
 ]
 
-traseu = [-1, 1, 2, 3, 4, 5, 6, 0, 2, 5, 3, 4, 6, 2, 2, 0
+board_track = [-1, 1, 2, 3, 4, 5, 6, 0, 2, 5, 3, 4, 6, 2, 2, 0,
           3, 5, 4, 1, 6, 2, 4, 5, 5, 0, 6, 3, 4, 2, 0, 1, 
           5, 1, 3, 4, 4, 4, 5, 0, 6, 3, 5, 4, 1, 3, 2, 0,
-          0, 1, 1, 2, 3, 6, 3, 5, 2, 1, 0, 6, 6, 5, 2, 1
-          2, 5, 0, 3, 3, 5, 0, 6, 1, 4, 0, 6, 3, 5, 1, 4
+          0, 1, 1, 2, 3, 6, 3, 5, 2, 1, 0, 6, 6, 5, 2, 1,
+          2, 5, 0, 3, 3, 5, 0, 6, 1, 4, 0, 6, 3, 5, 1, 4,
           2, 6, 2, 3, 1, 6, 5, 6, 2, 0, 4, 0, 1, 6, 4, 4,
           1, 6, 6, 3, 0]
 
@@ -203,8 +203,11 @@ def processGames():
     path_write = '../date/351_Moarcas_Cosmin/'
     last_image_ = getBoard(cv.imread('../date/imagini_auxiliare/01.jpg'))
 
+
     for joc in range(1, 6):
+        file_players_order = open(f'../date/antrenare/{joc}_mutari.txt')
         last_image = last_image_
+        points = [0, 0]
         for i in range(1, 21):
             if i < 10:
                 image_name = f"{joc}_0{i}.jpg"
@@ -213,20 +216,34 @@ def processGames():
             
             file_name = image_name[:-3] + 'txt'
 
-            image = cv.imread(path_read + image_name)
-            point1, point2 = getPiecePosition(image, last_image)
+            current_player = int(file_players_order.readline().split()[1][-1]) - 1
 
-            nr_dots_point1 = getNumberOfDots(image, *point1)
-            nr_dots_point2 = getNumberOfDots(image, *point2)
-        
-            line_point1 = point1[0] + 1
-            line_point2 = point2[0] + 1
-            column_point1 = chr(ord('A') + point1[1])
-            column_point2 = chr(ord('A') + point2[1])
+            image = cv.imread(path_read + image_name)
+            square1_position, square2_position = getPiecePosition(image, last_image)
+
+            square1_nr_dots = getNumberOfDots(image, *square1_position)
+            square2_nr_dots = getNumberOfDots(image, *square2_position)
+            
+            move_points = points_matrix[square1_position[0]][square1_position[1]] + points_matrix[square2_position[0]][square2_position[1]] 
+            move_points += int(square1_nr_dots == square2_nr_dots) * move_points 
+
+            # check for bonus points
+            if square1_nr_dots == board_track[points[current_player]] or square2_nr_dots == board_track[points[current_player]]:
+                move_points += 3
+            if square1_nr_dots == board_track[points[1 - current_player]] or square2_nr_dots == board_track[points[1 - current_player]]:
+                points[1 - current_player] += 3
+            
+            points[current_player] += move_points
+
+            line_square1 = square1_position[0] + 1
+            line_square2 = square2_position[0] + 1
+            column_square1 = chr(ord('A') + square1_position[1])
+            column_square2 = chr(ord('A') + square2_position[1])
 
             with open(path_write + file_name, 'w') as file:
-                file.write(str(line_point1) + str(column_point1) + ' ' + str(nr_dots_point1) + '\n')
-                file.write(str(line_point2) + str(column_point2) + ' ' + str(nr_dots_point2))
+                file.write(str(line_square1) + str(column_square1) + ' ' + str(square1_nr_dots) + '\n')
+                file.write(str(line_square2) + str(column_square2) + ' ' + str(square2_nr_dots) + '\n')
+                file.write(str(move_points))
 
             last_image = image
 
@@ -255,7 +272,7 @@ def processGamesDebug():
 
 
 def main():
-    #processGames()
+    processGames()
 
 if __name__ == "__main__":
     main()

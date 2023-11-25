@@ -15,11 +15,15 @@ def main():
             true_labels = file_true_labels.readlines()
             my_labels = file_my_labels.readlines()
 
-            for k, my_label in enumerate(my_labels):
-                true_position = true_labels[k].split()[0]
-                my_position = my_label.split()[0]
-                true_nr_dots = true_labels[k].split()[1]
-                my_nr_dots = my_label.split()[1]
+            for k in range(2):
+                my_elements = my_labels[k].split()
+                true_elements = true_labels[k].split()
+
+                true_position = true_elements[0]
+                my_position = my_elements[0]
+                true_nr_dots = true_elements[1]
+                my_nr_dots = my_elements[1]
+
                 if my_position != true_position:
                     print(file_name)
                     print('Pozitie gresita!')
@@ -27,6 +31,15 @@ def main():
                 if my_nr_dots != true_nr_dots:
                     print(file_name)
                     print('Numar puncte gresit')
+                    return
+            
+            true_points = true_labels[2].split()[0]
+            my_points = my_labels[2].split()[0]
+            if true_points != my_points:
+                print(file_name)
+                print('Punctaj gresit')
+                return
+
 
 if __name__ == '__main__':
     main()
