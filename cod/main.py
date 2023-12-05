@@ -28,10 +28,8 @@ board_track = [-1, 1, 2, 3, 4, 5, 6, 0, 2, 5, 3, 4, 6, 2, 2, 0,
           2, 6, 2, 3, 1, 6, 5, 6, 2, 0, 4, 0, 1, 6, 4, 4,
           1, 6, 6, 3, 0]
 
-path_read = '../date/evaluare/fake_test/'
+path_read = '../date/testare/'
 path_write = '../date/evaluare/fisiere_solutie/351_Moarcas_Cosmin/'
-#path_read = '../date/antrenare/'
-#path_write = '../date/351_Moarcas_Cosmin/'
 
 number_games = 1
 number_moves = 20
@@ -67,7 +65,6 @@ def filterTable(image):
     _, image = cv.threshold(image, 150, 255, cv.THRESH_BINARY)
     kernel = np.ones((3,3),np.uint8)
     image = cv.medianBlur(image, 25)
-    showImage(image)
     return image
     
 def getBoardCorners(image):
@@ -140,7 +137,6 @@ def getPositionByColumn(column):
 
 def getPiecePosition(image, last_image):
     difference_image = filterTable(image) - filterTable(last_image)
-    showImage(difference_image)
     max_mean1 = 30
     max_mean2 = 30
     point1 = (0, 0)
@@ -195,7 +191,7 @@ def getNumberOfDots(image, line, column):
 
 
 def processGames():
-    empty_board = getBoard(cv.imread('../date/imagini_auxiliare/01.jpg'))
+    empty_board = getBoard(cv.imread('./01.jpg'))
 
     for joc in range(1, number_games + 1):
         file_players_order = open(path_read + f'{joc}_mutari.txt')
